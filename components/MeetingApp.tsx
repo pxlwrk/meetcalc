@@ -347,24 +347,33 @@ function SetupScreen({
         <section className="sticker-card mb-4 p-5">
           <h2 className="font-display text-lg font-black">Warum MeetCalc?</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Jedes Meeting kostet echtes Geld — an Gehalt, nicht nur an Zeit. MeetCalc macht diese Kosten
-            sichtbar, damit du dir bei jedem Termin zwei Fragen stellst: Müssen wirklich alle dabei sein?
-            Und steht das Ergebnis im Verhältnis zu den Kosten? Kürzer und kleiner ist oft günstiger — und
-            oft auch besser.
+            Jedes Meeting kostet echtes Geld, nicht nur Zeit, sondern auch Gehalt. MeetCalc macht diese
+            Kosten sichtbar, damit du dir bei jedem Termin zwei Fragen stellst: Müssen wirklich alle dabei
+            sein? Und steht das Ergebnis im Verhältnis zu den Kosten? Kürzer und kleiner ist oft günstiger
+            und oft auch besser.
           </p>
           <h3 className="mt-4 font-display text-xs font-black uppercase tracking-[0.15em]">
             So funktioniert&apos;s
           </h3>
           <ol className="mt-2 flex list-decimal flex-col gap-1 pl-4 text-sm text-muted marker:font-bold marker:text-ink">
-            <li>Teilnehmende nach Kostengruppe hinzufügen</li>
+            <li>
+              Teilnehmende nach Kostengruppe hinzufügen, wahlweise mit einem eigenen Stundensatz für
+              externe Berater
+            </li>
             <li>Optional: geplante Dauer festlegen</li>
-            <li>Start drücken — der Zähler läuft mit im Meeting</li>
+            <li>Start drücken, dann läuft der Zähler mit im Meeting</li>
           </ol>
         </section>
 
         <section className="sticker-card mb-4 p-5">
           <h1 className="font-display text-xl font-black">Teilnehmende</h1>
-          <p className="mb-4 mt-1 text-sm text-muted">Wer sitzt mit im Meeting?</p>
+          <p className="mb-4 mt-1 text-sm text-muted">
+            Wer sitzt mit im Meeting? Neben den offiziellen Sätzen lassen sich unter{" "}
+            <Link href="/raten" className="font-semibold text-ink underline underline-offset-2">
+              Sätze
+            </Link>{" "}
+            auch individuelle Stundensätze anlegen, etwa für externe Berater.
+          </p>
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <select
@@ -376,7 +385,7 @@ function SetupScreen({
                 <optgroup key={group} label={GROUP_LABELS[group]}>
                   {list.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.name} — {formatEuro(r.hourlyRate)}/h
+                      {r.name} ({formatEuro(r.hourlyRate)}/h)
                     </option>
                   ))}
                 </optgroup>

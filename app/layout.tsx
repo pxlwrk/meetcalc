@@ -16,9 +16,9 @@ const inter = Inter({
 });
 
 const SITE_URL = "https://meetcalc.pxlwrk.de";
-const TITLE = "MeetCalc — Meetingkostenrechner";
+const TITLE = "MeetCalc: Meetingkostenrechner";
 const DESCRIPTION =
-  "Live-Kostenzähler für Meetings auf Basis offizieller Personalkostensätze des Bundes (BMF PSK 2025). Kostenlos & Open Source.";
+  "Live-Kostenzähler für Meetings auf Basis offizieller Personalkostensätze des Bundes (BMF PSK 2025), inklusive frei anlegbarer Stundensätze für externe Berater. Kostenlos und Open Source.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

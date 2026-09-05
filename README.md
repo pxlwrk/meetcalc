@@ -1,4 +1,4 @@
-# MeetCalc — Meetingkostenrechner
+# MeetCalc: Meetingkostenrechner
 
 Zeigt die Kosten eines Meetings sekundengenau live an, auf Basis offizieller
 Personalkostensätze des Bundes (BMF-Rundschreiben „Personal- und Sachkosten in
@@ -47,11 +47,12 @@ Gemeinkostenzuschlag, berechnet nach der BMF-Zuschlagskalkulation. Sie sind
 gerundete Näherungswerte für Orientierungszwecke, keine verbindliche Kosten-
 und Leistungsrechnung. Herleitung siehe `prisma/seed.ts` und der Projektplan.
 
-Externe Sätze (Dienstleister, Berater) haben keine amtliche Quelle. Sie werden
-über die Sätze-Verwaltung (`/raten`) angelegt, aber ausschließlich im
-`localStorage` des jeweiligen Browsers gespeichert — nicht in der
-gemeinsamen Datenbank. Die offiziellen BMF-Sätze lassen sich dort nicht
-löschen, nur der Name/Betrag ist redaktionell korrigierbar.
+Externe Sätze (Dienstleister, Berater) haben keine amtliche Quelle und lassen
+sich individuell anlegen. Sie werden über die Sätze-Verwaltung (`/raten`)
+angelegt, aber ausschließlich im `localStorage` des jeweiligen Browsers
+gespeichert, nicht in der gemeinsamen Datenbank. Die offiziellen BMF-Sätze
+lassen sich dort nicht löschen, nur der Name und Betrag sind redaktionell
+korrigierbar.
 
 ## Deployment
 

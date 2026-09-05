@@ -111,6 +111,11 @@ export function RatesManager({ initialRates }: { initialRates: Rate[] }) {
       </header>
 
       <main className="mx-auto w-full max-w-md flex-1 px-5 pb-10 sm:max-w-xl lg:max-w-2xl">
+        <p className="mb-4 px-1 text-sm text-muted">
+          Unten stehen die offiziellen BMF-Stundensätze für Beamte und Tarifbeschäftigte. Ganz unten
+          kannst du zusätzlich eigene, individuelle Stundensätze anlegen, etwa für externe Berater oder
+          Dienstleister.
+        </p>
         {error && (
           <p className="sticker-card mb-4 border-coral bg-coral/10 px-4 py-3 text-sm font-semibold text-coral">
             {error}
@@ -179,7 +184,8 @@ export function RatesManager({ initialRates }: { initialRates: Rate[] }) {
         <section className="sticker-card p-5">
           <h2 className="font-display text-lg font-black">Neuen Satz anlegen</h2>
           <p className="mt-1 text-sm text-muted">
-            Für externe Dienstleister oder Berater — wird nur in diesem Browser gespeichert, nicht geteilt.
+            Für externe Dienstleister oder Berater, mit individuellem Stundensatz. Wird nur in diesem
+            Browser gespeichert und nicht geteilt.
           </p>
           <div className="mt-4 flex flex-wrap items-end gap-3">
             <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-xs font-semibold text-muted">
