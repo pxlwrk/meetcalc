@@ -15,7 +15,7 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 });
 
-const SITE_URL = "https://meetcalc-weld.vercel.app";
+const SITE_URL = "https://meetcalc.pxlwrk.de";
 const TITLE = "MeetCalc — Meetingkostenrechner";
 const DESCRIPTION =
   "Live-Kostenzähler für Meetings auf Basis offizieller Personalkostensätze des Bundes (BMF PSK 2025). Kostenlos & Open Source.";
