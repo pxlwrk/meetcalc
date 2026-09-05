@@ -13,6 +13,7 @@ import {
   RunningMeetingState,
 } from "@/lib/timer";
 import { GROUP_LABELS } from "@/lib/rates";
+import { exitFullscreen, isFullscreenActive, requestFullscreen } from "@/lib/fullscreen";
 
 const STORAGE_KEY = "meetcalc.session.v1";
 
@@ -57,6 +58,61 @@ function readStoredSession(): Session | null {
   }
 }
 
+/**
+ * While `enabled`, puts the page into fullscreen as soon as a touch device is
+ * rotated into landscape (propping a phone up during a meeting), and drops
+ * back out on the way back to portrait. Browsers require a user gesture to
+ * *enter* fullscreen, which a rotation event technically isn't everywhere —
+ * so this is best-effort, and `toggleFullscreen` is exposed as a manual
+ * fallback button for browsers (notably iPhone Safari) where it silently
+ * does nothing automatically.
+ */
+function useLandscapeFullscreen(enabled: boolean) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(isFullscreenActive());
+    onChange();
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const mql = window.matchMedia("(orientation: landscape) and (pointer: coarse)");
+    const sync = () => {
+      if (mql.matches && !isFullscreenActive()) {
+        requestFullscreen(document.documentElement);
+      } else if (!mql.matches && isFullscreenActive()) {
+        exitFullscreen();
+      }
+    };
+    sync();
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, [enabled]);
+
+  // Leaving the live view entirely (e.g. back to setup) should hand control
+  // of the screen back to the browser chrome.
+  useEffect(() => {
+    if (!enabled && isFullscreenActive()) exitFullscreen();
+  }, [enabled]);
+
+  function toggleFullscreen() {
+    if (isFullscreenActive()) {
+      exitFullscreen();
+    } else {
+      requestFullscreen(document.documentElement);
+    }
+  }
+
+  return { isFullscreen, toggleFullscreen };
+}
+
 export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
   const [rates] = useState<Rate[]>(initialRates);
   const [selectedRateId, setSelectedRateId] = useState<string>(initialRates[0]?.id ?? "");
@@ -64,6 +120,7 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
   const [view, setView] = useState<View>("setup");
   const [now, setNow] = useState(() => Date.now());
   const [persistEnabled, setPersistEnabled] = useState(false);
+  const { isFullscreen, toggleFullscreen } = useLandscapeFullscreen(view === "live");
 
   const { status, accumulatedMs, startedAt, lineCounts, plannedMinutes } = session;
 
@@ -196,6 +253,8 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
         onStop={stop}
         onResume={start}
         onReset={reset}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
       />
     );
   }
@@ -447,6 +506,8 @@ function LiveScreen({
   onStop,
   onResume,
   onReset,
+  isFullscreen,
+  onToggleFullscreen,
 }: {
   status: Status;
   isOverrun: boolean;
@@ -460,6 +521,8 @@ function LiveScreen({
   onStop: () => void;
   onResume: () => void;
   onReset: () => void;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
 }) {
   const stageClass = status === "running" ? (isOverrun ? "stage-overrun" : "stage-running") : "stage-paused";
   const progressPct =
@@ -471,7 +534,15 @@ function LiveScreen({
         <button onClick={onEdit} className="text-sm font-bold underline underline-offset-4">
           ← Bearbeiten
         </button>
-        <StatusPill status={status} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleFullscreen}
+            className="rounded-full border-2 border-ink bg-paper px-3 py-1 text-xs font-bold"
+          >
+            {isFullscreen ? "Verkleinern" : "Vollbild"}
+          </button>
+          <StatusPill status={status} />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center px-5 text-center">
