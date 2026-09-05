@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "MeetCalc — Sitzungskostenrechner",
+  title: "MeetCalc — Meetingkostenrechner",
   description:
     "Live-Kostenzähler für Meetings auf Basis offizieller Personalkostensätze des Bundes (BMF PSK 2025).",
 };

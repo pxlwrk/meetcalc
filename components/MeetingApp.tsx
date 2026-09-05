@@ -333,7 +333,7 @@ function SetupScreen({
           >
             <span>
               <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
-                {status === "running" ? "Sitzung läuft" : "Sitzung pausiert"}
+                {status === "running" ? "Meeting läuft" : "Meeting pausiert"}
               </span>
               <span className="font-display tnum text-lg font-black">{formatEuro(cost)} bisher</span>
             </span>
@@ -547,18 +547,25 @@ function LiveScreen({
 
       <div className="flex flex-1 flex-col items-center justify-center px-5 text-center">
         <p className="font-display text-xs font-black uppercase tracking-[0.25em] opacity-70">
-          Sitzungskosten
+          Meetingkosten
         </p>
         <BigCost amount={cost} />
-        <p className="tnum mt-3 text-sm font-bold opacity-80">
+        <p className="tnum mt-8 text-sm font-bold opacity-80">
           {formatDuration(elapsedSeconds)} · {formatEuro(hourlySum)}/Std · {participantCount}{" "}
           {participantCount === 1 ? "Teilnehmer" : "Teilnehmende"}
         </p>
 
         {savings !== null && (
           <div className="sticker-card mt-6 inline-flex items-center gap-2 bg-paper px-4 py-2 text-sm font-bold text-ink">
-            {isOverrun ? "Überzogen um " : "Sparst gerade "}
-            <span className="font-display tnum">{formatEuro(Math.abs(savings))}</span>
+            {isOverrun ? (
+              <>
+                Überzogen um <span className="font-display tnum">{formatEuro(Math.abs(savings))}</span>
+              </>
+            ) : (
+              <>
+                Jetzt stoppen und <span className="font-display tnum">{formatEuro(savings)}</span> sparen
+              </>
+            )}
           </div>
         )}
       </div>
@@ -614,8 +621,8 @@ function BigCost({ amount }: { amount: number }) {
   const euroStr = new Intl.NumberFormat("de-DE").format(euros);
   return (
     <p className="font-display tnum leading-none">
-      <span className="text-[clamp(3.5rem,18vw,8rem)] font-black">{euroStr}</span>
-      <span className="text-[clamp(1.5rem,6vw,2.75rem)] font-black opacity-70">
+      <span className="text-[clamp(4.5rem,26vw,13rem)] font-black">{euroStr}</span>
+      <span className="text-[clamp(2rem,9vw,4.5rem)] font-black opacity-70">
         ,{cents.toString().padStart(2, "0")}&nbsp;€
       </span>
     </p>
