@@ -17,6 +17,7 @@ import { GROUP_LABELS } from "@/lib/rates";
 const STORAGE_KEY = "meetcalc.session.v1";
 
 type Status = "idle" | "running" | "stopped";
+type View = "setup" | "live";
 
 interface Session {
   az: string | null;
@@ -60,10 +61,11 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
   const [rates] = useState<Rate[]>(initialRates);
   const [selectedRateId, setSelectedRateId] = useState<string>(initialRates[0]?.id ?? "");
   const [session, setSession] = useState<Session>(DEFAULT_SESSION);
+  const [view, setView] = useState<View>("setup");
   const [now, setNow] = useState(() => Date.now());
   const [persistEnabled, setPersistEnabled] = useState(false);
 
-  const { az, status, accumulatedMs, startedAt, lineCounts, plannedMinutes } = session;
+  const { status, accumulatedMs, startedAt, lineCounts, plannedMinutes } = session;
 
   // The initial render always uses DEFAULT_SESSION so it matches the
   // server-rendered markup (localStorage isn't available during SSR). Once
@@ -73,7 +75,10 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
     /* eslint-disable react-hooks/set-state-in-effect -- one-time sync from
        localStorage, a client-only external store unavailable during SSR/hydration. */
     const stored = readStoredSession();
-    if (stored) setSession(stored);
+    if (stored) {
+      setSession(stored);
+      setView(stored.status === "idle" ? "setup" : "live");
+    }
     setPersistEnabled(true);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
@@ -111,12 +116,9 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
   const plannedBudget =
     plannedMinutes && plannedMinutes > 0 ? costForElapsedSeconds(hourlySum, plannedMinutes * 60) : null;
   const savings = plannedBudget !== null ? plannedBudget - cost : null;
+  const isOverrun = savings !== null && savings < 0;
 
   const participantCount = lines.reduce((sum, l) => sum + l.count, 0);
-
-  function setPlannedMinutes(value: number | null) {
-    setSession((prev) => ({ ...prev, plannedMinutes: value }));
-  }
 
   function addParticipant() {
     if (!selectedRateId) return;
@@ -139,6 +141,10 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
     });
   }
 
+  function setPlannedMinutes(value: number | null) {
+    setSession((prev) => ({ ...prev, plannedMinutes: value }));
+  }
+
   function start() {
     setSession((prev) => {
       if (prev.status === "idle") {
@@ -149,6 +155,7 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
       }
       return prev;
     });
+    setView("live");
   }
 
   function stop() {
@@ -161,6 +168,7 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
 
   function reset() {
     setSession((prev) => ({ ...prev, status: "idle", accumulatedMs: 0, startedAt: null, az: null }));
+    setView("setup");
   }
 
   const grouped = useMemo(() => {
@@ -173,297 +181,372 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
     return map;
   }, [rates]);
 
+  if (view === "live") {
+    return (
+      <LiveScreen
+        status={status}
+        isOverrun={isOverrun}
+        cost={cost}
+        elapsedSeconds={elapsedSeconds}
+        hourlySum={hourlySum}
+        participantCount={participantCount}
+        savings={savings}
+        plannedMinutes={plannedMinutes}
+        onEdit={() => setView("setup")}
+        onStop={stop}
+        onResume={start}
+        onReset={reset}
+      />
+    );
+  }
+
   return (
-    <div className="flex-1 flex flex-col">
-      <header className="border-b border-ink-700 px-6 py-6 sm:px-10">
-        <div className="mx-auto flex max-w-6xl items-end justify-between gap-4">
-          <div>
-            <p className="font-mono-num text-[11px] uppercase tracking-[0.25em] text-brass-bright">
-              Bundesbehörden · Kostenrechner
-            </p>
-            <h1 className="font-display text-4xl font-semibold italic tracking-tight text-text-on-ink sm:text-5xl">
-              MeetCalc
-            </h1>
-          </div>
-          <div className="flex flex-col items-end gap-2 text-right">
-            {az && (
-              <p className="font-mono-num text-xs text-text-on-ink-muted">
-                AZ&nbsp;{az}
-              </p>
-            )}
-            <Link
-              href="/raten"
-              className="text-sm text-brass-bright underline decoration-brass/50 underline-offset-4 hover:text-brass-bright/80"
-            >
-              Sätze verwalten →
-            </Link>
-          </div>
+    <SetupScreen
+      grouped={grouped}
+      selectedRateId={selectedRateId}
+      onSelectRate={setSelectedRateId}
+      onAddParticipant={addParticipant}
+      lines={lines}
+      onChangeCount={changeCount}
+      participantCount={participantCount}
+      hourlySum={hourlySum}
+      plannedMinutes={plannedMinutes}
+      onSetPlannedMinutes={setPlannedMinutes}
+      plannedBudget={plannedBudget}
+      status={status}
+      cost={cost}
+      onPrimaryAction={status === "idle" ? start : () => setView("live")}
+      onReset={reset}
+    />
+  );
+}
+
+function SetupScreen({
+  grouped,
+  selectedRateId,
+  onSelectRate,
+  onAddParticipant,
+  lines,
+  onChangeCount,
+  participantCount,
+  hourlySum,
+  plannedMinutes,
+  onSetPlannedMinutes,
+  plannedBudget,
+  status,
+  cost,
+  onPrimaryAction,
+  onReset,
+}: {
+  grouped: Map<Rate["group"], Rate[]>;
+  selectedRateId: string;
+  onSelectRate: (id: string) => void;
+  onAddParticipant: () => void;
+  lines: ParticipantLine[];
+  onChangeCount: (rateId: string, delta: number) => void;
+  participantCount: number;
+  hourlySum: number;
+  plannedMinutes: number | null;
+  onSetPlannedMinutes: (v: number | null) => void;
+  plannedBudget: number | null;
+  status: Status;
+  cost: number;
+  onPrimaryAction: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="flex min-h-dvh flex-col bg-cream">
+      <header className="mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 pb-4 sm:max-w-lg">
+        <div className="flex items-center gap-2">
+          <span className="h-3.5 w-3.5 rounded-full border-2 border-ink bg-pink" />
+          <span className="font-display text-2xl font-black tracking-tight">MeetCalc</span>
         </div>
+        <Link href="/raten" className="pill-btn pill-btn-ghost px-3 py-1.5 text-xs">
+          Sätze
+        </Link>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 sm:px-10">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
-          {/* Ledger / Teilnehmer-Formular */}
-          <section className="paper-card rounded-sm p-6 sm:p-8">
-            <div className="rule-double pb-3">
-              <h2 className="font-display text-2xl font-semibold">Teilnehmende</h2>
-              <p className="mt-1 text-sm text-text-on-paper-muted">
-                Wählen Sie Personen nach Gehalts- bzw. Kostengruppe aus.
-              </p>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <select
-                value={selectedRateId}
-                onChange={(e) => setSelectedRateId(e.target.value)}
-                className="flex-1 rounded-sm border border-paper-line bg-white/60 px-3 py-2 text-sm text-text-on-paper focus:border-stamp focus:outline-none focus-visible:ring-2 focus-visible:ring-stamp"
-              >
-                {Array.from(grouped.entries()).map(([group, list]) => (
-                  <optgroup key={group} label={GROUP_LABELS[group]}>
-                    {list.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name} — {formatEuro(r.hourlyRate)}/h
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <button
-                onClick={addParticipant}
-                disabled={!selectedRateId}
-                className="rounded-sm bg-stamp px-4 py-2 text-sm font-medium text-paper transition hover:bg-stamp-dark disabled:opacity-40"
-              >
-                + Hinzufügen
-              </button>
-            </div>
-
-            <ul className="mt-6 divide-y divide-paper-line border-t border-paper-line">
-              {lines.length === 0 && (
-                <li className="py-6 text-sm text-text-on-paper-muted">
-                  Noch niemand eingetragen. Fügen Sie oben die erste Person hinzu.
-                </li>
-              )}
-              {lines.map((line) => (
-                <li key={line.rateId} className="flex items-center justify-between gap-3 py-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{line.rate.name}</p>
-                    <p className="font-mono-num text-xs text-text-on-paper-muted">
-                      {formatEuro(line.rate.hourlyRate)}/h · Quelle: {line.rate.source ?? "Eigene Angabe"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      aria-label="Anzahl verringern"
-                      onClick={() => changeCount(line.rateId, -1)}
-                      className="h-7 w-7 rounded-full border border-paper-line text-sm leading-none hover:bg-paper-dim"
-                    >
-                      −
-                    </button>
-                    <span className="w-6 text-center font-mono-num text-sm">{line.count}</span>
-                    <button
-                      aria-label="Anzahl erhöhen"
-                      onClick={() => changeCount(line.rateId, 1)}
-                      className="h-7 w-7 rounded-full border border-paper-line text-sm leading-none hover:bg-paper-dim"
-                    >
-                      +
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-4 flex items-center justify-between border-t border-paper-line pt-4 text-sm">
-              <span className="text-text-on-paper-muted">
-                {participantCount} {participantCount === 1 ? "Person" : "Personen"}
+      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-32 sm:max-w-lg sm:pb-10">
+        {status !== "idle" && (
+          <button
+            onClick={onPrimaryAction}
+            className="sticker-card mb-4 flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+          >
+            <span>
+              <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
+                {status === "running" ? "Sitzung läuft" : "Sitzung pausiert"}
               </span>
-              <span className="font-mono-num font-semibold">
-                {formatEuro(hourlySum)}&nbsp;/&nbsp;Std.
-              </span>
-            </div>
+              <span className="font-display tnum text-lg font-black">{formatEuro(cost)} bisher</span>
+            </span>
+            <span className="pill-btn pill-btn-primary px-4 py-2 text-sm">Zähler →</span>
+          </button>
+        )}
 
-            <div className="mt-4 border-t border-paper-line pt-4">
-              <label className="text-sm font-medium text-text-on-paper" htmlFor="planned-minutes">
-                Geplante Dauer <span className="font-normal text-text-on-paper-muted">(optional)</span>
-              </label>
-              <p className="mt-1 text-xs text-text-on-paper-muted">
-                Damit zeigt der Zähler live an, wie viel Sie sparen, wenn Sie früher fertig sind.
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <input
-                  id="planned-minutes"
-                  type="number"
-                  min={1}
-                  step={5}
-                  value={plannedMinutes ?? ""}
-                  onChange={(e) => {
-                    const value = e.target.value === "" ? null : Number(e.target.value);
-                    setPlannedMinutes(value !== null && Number.isFinite(value) && value > 0 ? value : null);
-                  }}
-                  placeholder="z. B. 30"
-                  className="w-24 rounded-sm border border-paper-line bg-white/60 px-3 py-2 text-sm text-text-on-paper focus:border-stamp focus:outline-none"
-                />
-                <span className="text-sm text-text-on-paper-muted">Min.</span>
-                <div className="ml-2 flex flex-wrap gap-2">
-                  {DURATION_PRESETS.map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setPlannedMinutes(m)}
-                      className={`rounded-full border px-3 py-1 text-xs transition ${
-                        plannedMinutes === m
-                          ? "border-stamp bg-stamp text-paper"
-                          : "border-paper-line text-text-on-paper-muted hover:border-stamp hover:text-stamp"
-                      }`}
-                    >
-                      {m}
-                    </button>
+        <section className="sticker-card mb-4 p-5">
+          <h1 className="font-display text-xl font-black">Teilnehmende</h1>
+          <p className="mb-4 mt-1 text-sm text-muted">Wer sitzt mit im Meeting?</p>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <select
+              value={selectedRateId}
+              onChange={(e) => onSelectRate(e.target.value)}
+              className="flex-1 rounded-full border-2 border-ink bg-paper px-4 py-2.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-deep"
+            >
+              {Array.from(grouped.entries()).map(([group, list]) => (
+                <optgroup key={group} label={GROUP_LABELS[group]}>
+                  {list.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name} — {formatEuro(r.hourlyRate)}/h
+                    </option>
                   ))}
-                  {plannedMinutes !== null && (
-                    <button
-                      onClick={() => setPlannedMinutes(null)}
-                      className="rounded-full px-3 py-1 text-xs text-text-on-paper-muted underline decoration-text-on-paper-muted/40 underline-offset-4 hover:text-alert"
-                    >
-                      Entfernen
-                    </button>
-                  )}
+                </optgroup>
+              ))}
+            </select>
+            <button
+              onClick={onAddParticipant}
+              disabled={!selectedRateId}
+              className="pill-btn pill-btn-dark px-5 py-2.5 text-sm"
+            >
+              + Hinzufügen
+            </button>
+          </div>
+
+          <ul className="mt-4 flex flex-col gap-2">
+            {lines.length === 0 && (
+              <li className="rounded-2xl border-2 border-dashed border-ink/30 px-4 py-5 text-center text-sm text-muted">
+                Noch niemand eingetragen.
+              </li>
+            )}
+            {lines.map((line) => (
+              <li
+                key={line.rateId}
+                className="flex items-center justify-between gap-3 rounded-2xl border-2 border-ink px-4 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">{line.rate.name}</p>
+                  <p className="text-xs text-muted">
+                    {formatEuro(line.rate.hourlyRate)}/h · {line.rate.source ?? "Eigene Angabe"}
+                  </p>
                 </div>
-              </div>
-              {plannedBudget !== null && (
-                <p className="mt-3 font-mono-num text-sm text-text-on-paper-muted">
-                  Geplantes Budget: <span className="font-semibold text-text-on-paper">{formatEuro(plannedBudget)}</span>
-                </p>
-              )}
-            </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    aria-label="Anzahl verringern"
+                    onClick={() => onChangeCount(line.rateId, -1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink text-base leading-none hover:bg-cream-dim"
+                  >
+                    −
+                  </button>
+                  <span className="tnum w-5 text-center text-sm font-bold">{line.count}</span>
+                  <button
+                    aria-label="Anzahl erhöhen"
+                    onClick={() => onChangeCount(line.rateId, 1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink text-base leading-none hover:bg-cream-dim"
+                  >
+                    +
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
 
-            <details className="mt-6 rounded-sm border border-paper-line bg-paper-dim/50 px-4 py-3 text-xs text-text-on-paper-muted open:pb-4">
-              <summary className="cursor-pointer select-none font-medium text-text-on-paper">
-                Kalkulationsgrundlage
-              </summary>
-              <p className="mt-2 leading-relaxed">
-                Die hinterlegten Sätze sind Vollkosten-Stundensätze (Gehalt, Versorgung/Nebenkosten,
-                anteilige Sachkosten und Gemeinkostenzuschlag) auf Basis des BMF-Rundschreibens
-                „Personal- und Sachkosten in der Bundesverwaltung für Wirtschaftlichkeitsuntersuchungen
-                und Kostenberechnungen&rdquo; (PSK), Datenstand 2025. Es handelt sich um gerundete
-                Näherungswerte für Orientierungszwecke, keine verbindliche Kosten- und
-                Leistungsrechnung.
-              </p>
-            </details>
-          </section>
+          <div className="mt-4 flex items-center justify-between border-t-2 border-dashed border-ink/20 pt-4 text-sm">
+            <span className="text-muted">
+              {participantCount} {participantCount === 1 ? "Person" : "Personen"}
+            </span>
+            <span className="font-display tnum font-black">{formatEuro(hourlySum)} / Std.</span>
+          </div>
+        </section>
 
-          {/* Kosten-Stage */}
-          <section className="flex flex-col items-center justify-between gap-8 rounded-sm border border-ink-700 bg-ink-900 p-6 sm:p-8">
-            <div className="flex w-full items-center justify-between">
-              <StatusStamp status={status} />
-              <span className="font-mono-num text-xs text-text-on-ink-muted">
-                {formatDuration(elapsedSeconds)}
-              </span>
-            </div>
+        <section className="sticker-card mb-4 p-5">
+          <h2 className="font-display text-lg font-black">
+            Geplante Dauer <span className="font-sans text-sm font-normal text-muted">(optional)</span>
+          </h2>
+          <p className="mb-3 mt-1 text-sm text-muted">
+            Der Zähler zeigt dann live, wie viel du sparst, wenn&apos;s kürzer wird.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {DURATION_PRESETS.map((m) => (
+              <button
+                key={m}
+                onClick={() => onSetPlannedMinutes(m)}
+                className={`chip ${plannedMinutes === m ? "chip-active" : "chip-inactive"}`}
+              >
+                {m} Min.
+              </button>
+            ))}
+            <input
+              type="number"
+              min={1}
+              step={5}
+              value={plannedMinutes && !DURATION_PRESETS.includes(plannedMinutes) ? plannedMinutes : ""}
+              onChange={(e) => {
+                const value = e.target.value === "" ? null : Number(e.target.value);
+                onSetPlannedMinutes(value !== null && Number.isFinite(value) && value > 0 ? value : null);
+              }}
+              placeholder="eigene"
+              className="w-20 rounded-full border-2 border-ink bg-paper px-3 py-1.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-deep"
+            />
+            {plannedMinutes !== null && (
+              <button
+                onClick={() => onSetPlannedMinutes(null)}
+                className="text-xs font-semibold text-muted underline decoration-muted/40 underline-offset-4 hover:text-coral"
+              >
+                Entfernen
+              </button>
+            )}
+          </div>
+          {plannedBudget !== null && (
+            <p className="mt-3 font-display tnum text-sm font-bold">
+              Budget: <span className="text-pink-deep">{formatEuro(plannedBudget)}</span>
+            </p>
+          )}
+        </section>
 
-            <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
-              <p className="font-mono-num text-[11px] uppercase tracking-[0.3em] text-text-on-ink-muted">
-                Sitzungskosten bisher
-              </p>
-              <CostReadout amount={cost} />
-              <p className="mt-3 text-xs text-text-on-ink-muted">
-                bei {formatEuro(hourlySum)} / Std. für {participantCount}{" "}
-                {participantCount === 1 ? "Teilnehmer" : "Teilnehmende"}
-              </p>
-              {savings !== null && status !== "idle" && (
-                <SavingsReadout savings={savings} plannedMinutes={plannedMinutes!} />
-              )}
-            </div>
-
-            <div className="flex items-center gap-6">
-              {status !== "running" ? (
-                <button
-                  onClick={start}
-                  disabled={hourlySum === 0}
-                  className="seal-button flex h-28 w-28 flex-col items-center justify-center bg-ink-800 font-display text-sm font-semibold uppercase tracking-wide text-brass-bright disabled:cursor-not-allowed disabled:opacity-30"
-                >
-                  {status === "stopped" ? (
-                    <>
-                      Fort-
-                      <br />
-                      setzen
-                    </>
-                  ) : (
-                    "Start"
-                  )}
-                </button>
-              ) : (
-                <button
-                  onClick={stop}
-                  className="seal-button seal-button--stop flex h-28 w-28 flex-col items-center justify-center bg-ink-800 font-display text-sm font-semibold uppercase tracking-wide text-alert"
-                >
-                  Stopp
-                </button>
-              )}
-              {status === "stopped" && (
-                <button
-                  onClick={reset}
-                  className="text-sm text-text-on-ink-muted underline decoration-text-on-ink-muted/40 underline-offset-4 hover:text-text-on-ink"
-                >
-                  Neues Meeting
-                </button>
-              )}
-            </div>
-          </section>
-        </div>
+        <details className="px-1 text-xs text-muted">
+          <summary className="cursor-pointer select-none font-semibold text-ink">Kalkulationsgrundlage</summary>
+          <p className="mt-2 leading-relaxed">
+            Die hinterlegten Sätze sind Vollkosten-Stundensätze (Gehalt, Versorgung/Nebenkosten, anteilige
+            Sachkosten und Gemeinkostenzuschlag) auf Basis des BMF-Rundschreibens „Personal- und Sachkosten in
+            der Bundesverwaltung für Wirtschaftlichkeitsuntersuchungen und Kostenberechnungen&rdquo; (PSK),
+            Datenstand 2025. Gerundete Näherungswerte für Orientierungszwecke, keine verbindliche Kosten- und
+            Leistungsrechnung.
+          </p>
+        </details>
       </main>
 
-      <footer className="border-t border-ink-700 px-6 py-6 text-center text-xs text-text-on-ink-muted sm:px-10">
-        Datengrundlage: BMF-Rundschreiben „Personal- und Sachkosten in der Bundesverwaltung&rdquo; (PSK),
-        Datenstand 2025 · Näherungswerte ohne rechtliche Bindungswirkung.
-      </footer>
+      <div className="fixed inset-x-0 bottom-0 border-t-[3px] border-ink bg-cream/95 px-5 py-4 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:pb-10">
+        <div className="mx-auto flex w-full max-w-md items-center gap-3 sm:max-w-lg">
+          {status !== "idle" && (
+            <button onClick={onReset} className="text-sm font-semibold text-muted underline underline-offset-4">
+              Neu
+            </button>
+          )}
+          <button
+            onClick={onPrimaryAction}
+            disabled={hourlySum === 0}
+            className="pill-btn pill-btn-primary flex-1 py-4 text-base"
+          >
+            {status === "idle" ? "Meeting starten →" : "Zurück zum Zähler →"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function StatusStamp({ status }: { status: Status }) {
-  if (status === "running") {
-    return (
-      <span className="stamp-badge flex items-center gap-2 rounded-sm px-3 py-1 font-display text-xs font-semibold uppercase tracking-wider">
-        <span className="pulse-dot h-2 w-2 rounded-full bg-stamp" />
-        In Betrieb
-      </span>
-    );
-  }
-  if (status === "stopped") {
-    return (
-      <span className="stamp-badge rounded-sm px-3 py-1 font-display text-xs font-semibold uppercase tracking-wider opacity-70">
-        Angehalten
-      </span>
-    );
-  }
+function LiveScreen({
+  status,
+  isOverrun,
+  cost,
+  elapsedSeconds,
+  hourlySum,
+  participantCount,
+  savings,
+  plannedMinutes,
+  onEdit,
+  onStop,
+  onResume,
+  onReset,
+}: {
+  status: Status;
+  isOverrun: boolean;
+  cost: number;
+  elapsedSeconds: number;
+  hourlySum: number;
+  participantCount: number;
+  savings: number | null;
+  plannedMinutes: number | null;
+  onEdit: () => void;
+  onStop: () => void;
+  onResume: () => void;
+  onReset: () => void;
+}) {
+  const stageClass = status === "running" ? (isOverrun ? "stage-overrun" : "stage-running") : "stage-paused";
+  const progressPct =
+    plannedMinutes && plannedMinutes > 0 ? Math.min(100, (elapsedSeconds / (plannedMinutes * 60)) * 100) : null;
+
   return (
-    <span className="rounded-sm border-2 border-text-on-ink-muted/40 px-3 py-1 font-display text-xs font-semibold uppercase tracking-wider text-text-on-ink-muted">
-      Bereit
+    <div className={`flex min-h-dvh flex-col transition-colors duration-500 ${stageClass}`}>
+      <div className="flex items-center justify-between px-5 pt-6">
+        <button onClick={onEdit} className="text-sm font-bold underline underline-offset-4">
+          ← Bearbeiten
+        </button>
+        <StatusPill status={status} />
+      </div>
+
+      <div className="flex flex-1 flex-col items-center justify-center px-5 text-center">
+        <p className="font-display text-xs font-black uppercase tracking-[0.25em] opacity-70">
+          Sitzungskosten
+        </p>
+        <BigCost amount={cost} />
+        <p className="tnum mt-3 text-sm font-bold opacity-80">
+          {formatDuration(elapsedSeconds)} · {formatEuro(hourlySum)}/Std · {participantCount}{" "}
+          {participantCount === 1 ? "Teilnehmer" : "Teilnehmende"}
+        </p>
+
+        {savings !== null && (
+          <div className="sticker-card mt-6 inline-flex items-center gap-2 bg-paper px-4 py-2 text-sm font-bold text-ink">
+            {isOverrun ? "Überzogen um " : "Sparst gerade "}
+            <span className="font-display tnum">{formatEuro(Math.abs(savings))}</span>
+          </div>
+        )}
+      </div>
+
+      {progressPct !== null && (
+        <div className="h-3 w-full bg-black/10">
+          <div
+            className="h-full bg-ink transition-[width] duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      )}
+
+      <div className="flex flex-col items-center gap-3 px-5 py-8">
+        {status === "running" ? (
+          <button
+            onClick={onStop}
+            className="pill-btn pill-btn-dark w-full max-w-xs py-5 text-lg"
+          >
+            Stopp
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={onResume}
+              className="pill-btn pill-btn-primary w-full max-w-xs py-5 text-lg"
+            >
+              Fortsetzen
+            </button>
+            <button onClick={onReset} className="text-sm font-bold underline underline-offset-4">
+              Neues Meeting
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatusPill({ status }: { status: Status }) {
+  const label = status === "running" ? "LIVE" : "PAUSIERT";
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-ink px-3 py-1 font-display text-xs font-black text-paper">
+      <span className={`h-2 w-2 rounded-full bg-paper ${status === "running" ? "pulse-dot" : ""}`} />
+      {label}
     </span>
   );
 }
 
-function SavingsReadout({ savings, plannedMinutes }: { savings: number; plannedMinutes: number }) {
-  const isOverrun = savings < 0;
-  return (
-    <p
-      className={`mt-4 rounded-sm border px-4 py-2 font-mono-num text-sm ${
-        isOverrun ? "border-alert/50 text-alert" : "border-savings/50 text-savings"
-      }`}
-    >
-      {isOverrun ? "Bereits überzogen um " : "Ersparnis bei Stopp jetzt: "}
-      <span className="font-semibold">{formatEuro(Math.abs(savings))}</span>
-      <span className="ml-1 text-text-on-ink-muted">(geplant: {plannedMinutes} Min.)</span>
-    </p>
-  );
-}
-
-function CostReadout({ amount }: { amount: number }) {
+function BigCost({ amount }: { amount: number }) {
   const euros = Math.floor(amount);
   const cents = Math.floor((amount - euros) * 100);
   const euroStr = new Intl.NumberFormat("de-DE").format(euros);
   return (
-    <p className="font-mono-num leading-none text-text-on-ink">
-      <span className="text-6xl font-semibold sm:text-7xl">{euroStr}</span>
-      <span className="text-2xl text-text-on-ink-muted sm:text-3xl">,{cents.toString().padStart(2, "0")}&nbsp;€</span>
+    <p className="font-display tnum leading-none">
+      <span className="text-[clamp(3.5rem,18vw,8rem)] font-black">{euroStr}</span>
+      <span className="text-[clamp(1.5rem,6vw,2.75rem)] font-black opacity-70">
+        ,{cents.toString().padStart(2, "0")}&nbsp;€
+      </span>
     </p>
   );
 }
