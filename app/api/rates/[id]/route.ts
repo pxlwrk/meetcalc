@@ -29,10 +29,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  try {
-    await prisma.rate.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
-  } catch {
+
+  const existing = await prisma.rate.findUnique({ where: { id } });
+  if (!existing) {
     return NextResponse.json({ error: "Satz nicht gefunden." }, { status: 404 });
   }
+  if (existing.source) {
+    return NextResponse.json(
+      { error: "Offizielle BMF-Sätze können nicht gelöscht werden." },
+      { status: 403 }
+    );
+  }
+
+  await prisma.rate.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
 }

@@ -14,6 +14,7 @@ import {
 } from "@/lib/timer";
 import { GROUP_LABELS } from "@/lib/rates";
 import { exitFullscreen, isFullscreenActive, requestFullscreen } from "@/lib/fullscreen";
+import { readCustomRates } from "@/lib/customRates";
 
 const STORAGE_KEY = "meetcalc.session.v1";
 
@@ -114,7 +115,8 @@ function useLandscapeFullscreen(enabled: boolean) {
 }
 
 export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
-  const [rates] = useState<Rate[]>(initialRates);
+  const [customRates, setCustomRates] = useState<Rate[]>([]);
+  const rates = useMemo(() => [...initialRates, ...customRates], [initialRates, customRates]);
   const [selectedRateId, setSelectedRateId] = useState<string>(initialRates[0]?.id ?? "");
   const [session, setSession] = useState<Session>(DEFAULT_SESSION);
   const [view, setView] = useState<View>("setup");
@@ -136,6 +138,7 @@ export function MeetingApp({ initialRates }: { initialRates: Rate[] }) {
       setSession(stored);
       setView(stored.status === "idle" ? "setup" : "live");
     }
+    setCustomRates(readCustomRates());
     setPersistEnabled(true);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
