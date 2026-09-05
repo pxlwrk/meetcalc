@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RateGroup {
+  BEAMTE
+  TARIF
+  EXTERN
+}
+
+model Rate {
+  id         String    @id @default(cuid())
+  name       String
+  hourlyRate Decimal   @db.Decimal(10, 2)
+  group      RateGroup
+  source     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}

@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Aktenschrank ink greens */
+  --ink-950: #0b1d15;
+  --ink-900: #10261c;
+  --ink-800: #1b3327;
+  --ink-700: #274536;
+
+  /* Aktendeckel parchment */
+  --paper: #f1ecdf;
+  --paper-dim: #e4dcc8;
+  --paper-line: #cabf9f;
+
+  /* Dienstsiegel violet ink */
+  --stamp: #5b3b8c;
+  --stamp-dark: #422a68;
+
+  /* Amtssiegel brass */
+  --brass: #b7924a;
+  --brass-bright: #d4b46a;
+
+  --text-on-paper: #1c2a20;
+  --text-on-paper-muted: #6b6152;
+  --text-on-ink: #eae4d3;
+  --text-on-ink-muted: #9caa9e;
+
+  --alert: #a23b2e;
+  --ok: #3f6b4a;
+  --savings: #7fae86;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink-950: var(--ink-950);
+  --color-ink-900: var(--ink-900);
+  --color-ink-800: var(--ink-800);
+  --color-ink-700: var(--ink-700);
+  --color-paper: var(--paper);
+  --color-paper-dim: var(--paper-dim);
+  --color-paper-line: var(--paper-line);
+  --color-stamp: var(--stamp);
+  --color-stamp-dark: var(--stamp-dark);
+  --color-brass: var(--brass);
+  --color-brass-bright: var(--brass-bright);
+  --color-alert: var(--alert);
+  --color-ok: var(--ok);
+  --color-savings: var(--savings);
+  --color-text-on-paper: var(--text-on-paper);
+  --color-text-on-paper-muted: var(--text-on-paper-muted);
+  --color-text-on-ink: var(--text-on-ink);
+  --color-text-on-ink-muted: var(--text-on-ink-muted);
+  --font-display: var(--font-fraunces);
+  --font-mono: var(--font-plex-mono);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ink-950);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(183, 146, 74, 0.08), transparent),
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.06) 0px,
+      rgba(0, 0, 0, 0.06) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  color: var(--text-on-ink);
+  font-family: var(--font-sans), sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), serif;
+}
+
+.font-mono-num {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Paper-textured card used for forms and the ledger */
+.paper-card {
+  background: var(--paper);
+  color: var(--text-on-paper);
+  border: 1px solid var(--paper-line);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 18px 40px -20px rgba(0, 0, 0, 0.6);
+}
+
+.rule-double {
+  border-top: 3px double var(--brass);
+}
+
+.hairline {
+  border-color: var(--paper-line);
+}
+
+.ink-hairline {
+  border-color: var(--ink-700);
+}
+
+/* Amtssiegel stamp button */
+.seal-button {
+  position: relative;
+  border-radius: 9999px;
+  border: 3px solid var(--brass);
+  box-shadow:
+    0 0 0 4px var(--ink-950),
+    0 0 0 5px var(--brass-bright),
+    0 14px 30px -10px rgba(0, 0, 0, 0.7);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.seal-button:active {
+  transform: scale(0.96);
+  box-shadow:
+    0 0 0 4px var(--ink-950),
+    0 0 0 5px var(--brass-bright),
+    0 6px 14px -6px rgba(0, 0, 0, 0.7);
+}
+
+.seal-button--stop {
+  border-color: var(--alert);
+}
+
+/* Live stamp badge */
+.stamp-badge {
+  border: 2px solid var(--stamp);
+  color: var(--stamp);
+  transform: rotate(-4deg);
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(91, 59, 140, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(91, 59, 140, 0);
+  }
+}
+
+.pulse-dot {
+  animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+}
+
+::selection {
+  background: var(--stamp);
+  color: var(--paper);
 }
