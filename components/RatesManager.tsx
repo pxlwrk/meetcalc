@@ -206,6 +206,11 @@ export function RatesManager({ initialRates }: { initialRates: Rate[] }) {
             </button>
           </div>
         </section>
+
+        <footer className="mt-6 px-1 pb-4 text-center text-[11px] text-muted">
+          <p>Quelloffen &amp; kostenlos (MIT-Lizenz).</p>
+          <p className="mt-1">André Geier | PXLWRK</p>
+        </footer>
       </main>
     </div>
   );

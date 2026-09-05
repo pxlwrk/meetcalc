@@ -14,10 +14,28 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
 });
 
+const SITE_URL = "https://meetcalc-weld.vercel.app";
+const TITLE = "MeetCalc — Meetingkostenrechner";
+const DESCRIPTION =
+  "Live-Kostenzähler für Meetings auf Basis offizieller Personalkostensätze des Bundes (BMF PSK 2025). Kostenlos & Open Source.";
+
 export const metadata: Metadata = {
-  title: "MeetCalc — Meetingkostenrechner",
-  description:
-    "Live-Kostenzähler für Meetings auf Basis offizieller Personalkostensätze des Bundes (BMF PSK 2025).",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: "MeetCalc",
+    locale: "de_DE",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

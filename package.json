@@ -2,6 +2,8 @@
   "name": "meetcalc",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "author": "André Geier (PXLWRK)",
   "scripts": {
     "dev": "next dev",
     "build": "prisma migrate deploy && tsx prisma/seed.ts && next build",

@@ -1,10 +1,12 @@
-# MeetCalc — Sitzungskostenrechner
+# MeetCalc — Meetingkostenrechner
 
 Zeigt die Kosten eines Meetings sekundengenau live an, auf Basis offizieller
 Personalkostensätze des Bundes (BMF-Rundschreiben „Personal- und Sachkosten in
 der Bundesverwaltung für Wirtschaftlichkeitsuntersuchungen und
 Kostenberechnungen", PSK, Datenstand 2025) sowie frei definierbarer Sätze für
 externe Teilnehmer (Dienstleister, Berater).
+
+Open Source & kostenlos unter der [MIT-Lizenz](./LICENSE).
 
 ## Lokale Entwicklung
 
@@ -45,8 +47,11 @@ Gemeinkostenzuschlag, berechnet nach der BMF-Zuschlagskalkulation. Sie sind
 gerundete Näherungswerte für Orientierungszwecke, keine verbindliche Kosten-
 und Leistungsrechnung. Herleitung siehe `prisma/seed.ts` und der Projektplan.
 
-Externe Sätze (Dienstleister, Berater) haben keine amtliche Quelle und werden
-frei über die Sätze-Verwaltung (`/raten`) gepflegt.
+Externe Sätze (Dienstleister, Berater) haben keine amtliche Quelle. Sie werden
+über die Sätze-Verwaltung (`/raten`) angelegt, aber ausschließlich im
+`localStorage` des jeweiligen Browsers gespeichert — nicht in der
+gemeinsamen Datenbank. Die offiziellen BMF-Sätze lassen sich dort nicht
+löschen, nur der Name/Betrag ist redaktionell korrigierbar.
 
 ## Deployment
 

@@ -464,6 +464,24 @@ function SetupScreen({
           )}
         </section>
 
+        <section className="sticker-card mb-4 p-5">
+          <h2 className="font-display text-lg font-black">Warum MeetCalc?</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            Jedes Meeting kostet echtes Geld — an Gehalt, nicht nur an Zeit. MeetCalc macht diese Kosten
+            sichtbar, damit du dir bei jedem Termin zwei Fragen stellst: Müssen wirklich alle dabei sein?
+            Und steht das Ergebnis im Verhältnis zu den Kosten? Kürzer und kleiner ist oft günstiger — und
+            oft auch besser.
+          </p>
+          <h3 className="mt-4 font-display text-xs font-black uppercase tracking-[0.15em]">
+            So funktioniert&apos;s
+          </h3>
+          <ol className="mt-2 flex list-decimal flex-col gap-1 pl-4 text-sm text-muted marker:font-bold marker:text-ink">
+            <li>Teilnehmende nach Kostengruppe hinzufügen</li>
+            <li>Optional: geplante Dauer festlegen</li>
+            <li>Start drücken — der Zähler läuft mit im Meeting</li>
+          </ol>
+        </section>
+
         <details className="px-1 text-xs text-muted">
           <summary className="cursor-pointer select-none font-semibold text-ink">Kalkulationsgrundlage</summary>
           <p className="mt-2 leading-relaxed">
@@ -474,6 +492,11 @@ function SetupScreen({
             Leistungsrechnung.
           </p>
         </details>
+
+        <footer className="mt-6 px-1 pb-4 text-center text-[11px] text-muted">
+          <p>Quelloffen &amp; kostenlos (MIT-Lizenz).</p>
+          <p className="mt-1">André Geier | PXLWRK</p>
+        </footer>
       </main>
 
       <div className="fixed inset-x-0 bottom-0 border-t-[3px] border-ink bg-cream/95 px-5 py-4 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:pb-10">
