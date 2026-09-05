@@ -328,7 +328,7 @@ function SetupScreen({
         </Link>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-32 sm:max-w-xl lg:max-w-2xl sm:pb-10">
+      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-32 sm:max-w-xl lg:max-w-2xl">
         {status !== "idle" && (
           <button
             onClick={onPrimaryAction}
@@ -343,6 +343,24 @@ function SetupScreen({
             <span className="pill-btn pill-btn-primary px-4 py-2 text-sm">Zähler →</span>
           </button>
         )}
+
+        <section className="sticker-card mb-4 p-5">
+          <h2 className="font-display text-lg font-black">Warum MeetCalc?</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
+            Jedes Meeting kostet echtes Geld — an Gehalt, nicht nur an Zeit. MeetCalc macht diese Kosten
+            sichtbar, damit du dir bei jedem Termin zwei Fragen stellst: Müssen wirklich alle dabei sein?
+            Und steht das Ergebnis im Verhältnis zu den Kosten? Kürzer und kleiner ist oft günstiger — und
+            oft auch besser.
+          </p>
+          <h3 className="mt-4 font-display text-xs font-black uppercase tracking-[0.15em]">
+            So funktioniert&apos;s
+          </h3>
+          <ol className="mt-2 flex list-decimal flex-col gap-1 pl-4 text-sm text-muted marker:font-bold marker:text-ink">
+            <li>Teilnehmende nach Kostengruppe hinzufügen</li>
+            <li>Optional: geplante Dauer festlegen</li>
+            <li>Start drücken — der Zähler läuft mit im Meeting</li>
+          </ol>
+        </section>
 
         <section className="sticker-card mb-4 p-5">
           <h1 className="font-display text-xl font-black">Teilnehmende</h1>
@@ -464,24 +482,6 @@ function SetupScreen({
           )}
         </section>
 
-        <section className="sticker-card mb-4 p-5">
-          <h2 className="font-display text-lg font-black">Warum MeetCalc?</h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted">
-            Jedes Meeting kostet echtes Geld — an Gehalt, nicht nur an Zeit. MeetCalc macht diese Kosten
-            sichtbar, damit du dir bei jedem Termin zwei Fragen stellst: Müssen wirklich alle dabei sein?
-            Und steht das Ergebnis im Verhältnis zu den Kosten? Kürzer und kleiner ist oft günstiger — und
-            oft auch besser.
-          </p>
-          <h3 className="mt-4 font-display text-xs font-black uppercase tracking-[0.15em]">
-            So funktioniert&apos;s
-          </h3>
-          <ol className="mt-2 flex list-decimal flex-col gap-1 pl-4 text-sm text-muted marker:font-bold marker:text-ink">
-            <li>Teilnehmende nach Kostengruppe hinzufügen</li>
-            <li>Optional: geplante Dauer festlegen</li>
-            <li>Start drücken — der Zähler läuft mit im Meeting</li>
-          </ol>
-        </section>
-
         <details className="px-1 text-xs text-muted">
           <summary className="cursor-pointer select-none font-semibold text-ink">Kalkulationsgrundlage</summary>
           <p className="mt-2 leading-relaxed">
@@ -499,7 +499,7 @@ function SetupScreen({
         </footer>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 border-t-[3px] border-ink bg-cream/95 px-5 py-4 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:pb-10">
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t-[3px] border-ink bg-cream/95 px-5 py-4 backdrop-blur">
         <div className="mx-auto flex w-full max-w-md items-center gap-3 sm:max-w-xl lg:max-w-2xl">
           {status !== "idle" && (
             <button onClick={onReset} className="text-sm font-semibold text-muted underline underline-offset-4">
