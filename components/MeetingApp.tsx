@@ -315,7 +315,7 @@ function SetupScreen({
 }) {
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
-      <header className="mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 pb-4 sm:max-w-lg">
+      <header className="mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 pb-4 sm:max-w-xl lg:max-w-2xl">
         <div className="flex items-center gap-2">
           <span className="h-3.5 w-3.5 rounded-full border-2 border-ink bg-pink" />
           <span className="font-display text-2xl font-black tracking-tight">MeetCalc</span>
@@ -325,7 +325,7 @@ function SetupScreen({
         </Link>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-32 sm:max-w-lg sm:pb-10">
+      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-32 sm:max-w-xl lg:max-w-2xl sm:pb-10">
         {status !== "idle" && (
           <button
             onClick={onPrimaryAction}
@@ -349,7 +349,7 @@ function SetupScreen({
             <select
               value={selectedRateId}
               onChange={(e) => onSelectRate(e.target.value)}
-              className="flex-1 rounded-full border-2 border-ink bg-paper px-4 py-2.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-deep"
+              className="min-w-0 flex-1 rounded-full border-2 border-ink bg-paper px-4 py-2.5 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-deep"
             >
               {Array.from(grouped.entries()).map(([group, list]) => (
                 <optgroup key={group} label={GROUP_LABELS[group]}>
@@ -474,7 +474,7 @@ function SetupScreen({
       </main>
 
       <div className="fixed inset-x-0 bottom-0 border-t-[3px] border-ink bg-cream/95 px-5 py-4 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:pb-10">
-        <div className="mx-auto flex w-full max-w-md items-center gap-3 sm:max-w-lg">
+        <div className="mx-auto flex w-full max-w-md items-center gap-3 sm:max-w-xl lg:max-w-2xl">
           {status !== "idle" && (
             <button onClick={onReset} className="text-sm font-semibold text-muted underline underline-offset-4">
               Neu

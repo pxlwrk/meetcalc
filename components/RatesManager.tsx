@@ -75,7 +75,7 @@ export function RatesManager({ initialRates }: { initialRates: Rate[] }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
-      <header className="mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 pb-4 sm:max-w-lg">
+      <header className="mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6 pb-4 sm:max-w-xl lg:max-w-2xl">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Stammdaten</p>
           <h1 className="font-display text-2xl font-black tracking-tight">Sätze verwalten</h1>
@@ -85,7 +85,7 @@ export function RatesManager({ initialRates }: { initialRates: Rate[] }) {
         </Link>
       </header>
 
-      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-10 sm:max-w-lg">
+      <main className="mx-auto w-full max-w-md flex-1 px-5 pb-10 sm:max-w-xl lg:max-w-2xl">
         {error && (
           <p className="sticker-card mb-4 border-coral bg-coral/10 px-4 py-3 text-sm font-semibold text-coral">
             {error}
